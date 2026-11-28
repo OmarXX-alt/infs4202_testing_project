@@ -14,6 +14,8 @@ import com.halcyon.uniplace.engine.EngineDtos.MatchResult;
 import com.halcyon.uniplace.support.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import com.halcyon.uniplace.KnownDefect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -63,8 +65,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
 
     // ------------------------------------------------------------------ APP-02 active-application limits
 
+    @Tag(KnownDefect.TAG) // issue #6
     @Test
-    @DisplayName("TC-APP-020 [APP-02] a student on PROBATION may hold at most 2 active applications (Settings)")
+    @DisplayName("TC-APP-020 [APP-02] a student on PROBATION may hold at most 2 active applications (Settings) (defect #6)")
     void probationLimitIsTwo() {
         Student weak = student("1.80", List.of("Excel"));
         assertEquals(Standing.PROBATION, weak.getStanding(), "precondition: GPA 1.80 gives PROBATION (STU-03)");
@@ -73,8 +76,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
         assertEquals(2, service.activeLimitFor(weak));
     }
 
+    @Tag(KnownDefect.TAG) // issue #6
     @Test
-    @DisplayName("TC-APP-020b [APP-02] a third application from a PROBATION student is refused")
+    @DisplayName("TC-APP-020b [APP-02] a third application from a PROBATION student is refused (defect #6)")
     void probationStudentCannotSubmitThird() {
         Student weak = student("1.80", List.of("Java", "SQL"));
         User weakUser = studentUser(weak);
@@ -85,8 +89,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
         assertThrows(BusinessRuleException.class, () -> service.submit(weakUser, posting.getId(), LETTER));
     }
 
+    @Tag(KnownDefect.TAG) // issue #7
     @Test
-    @DisplayName("TC-APP-021 [APP-02] WITHDRAWN and REJECTED applications are not active and do not count")
+    @DisplayName("TC-APP-021 [APP-02] WITHDRAWN and REJECTED applications are not active and do not count (defect #7)")
     void onlyActiveStatesCount() {
         application(student, openPosting(company, "W1", List.of("Java"), 1), ApplicationState.WITHDRAWN, 40);
         application(student, openPosting(company, "W2", List.of("Java"), 1), ApplicationState.WITHDRAWN, 40);
@@ -98,8 +103,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
         assertEquals(2, service.countActive(student));
     }
 
+    @Tag(KnownDefect.TAG) // issue #7
     @Test
-    @DisplayName("TC-APP-021b [APP-02] a GOOD student with 4 withdrawn applications can still apply")
+    @DisplayName("TC-APP-021b [APP-02] a GOOD student with 4 withdrawn applications can still apply (defect #7)")
     void withdrawnApplicationsDoNotBlockSubmission() {
         for (int i = 0; i < 5; i++) {
             application(student, openPosting(company, "Old " + i, List.of("Java"), 1), ApplicationState.WITHDRAWN, 40);
@@ -110,8 +116,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
 
     // ------------------------------------------------------------------ APP-03 re-application
 
+    @Tag(KnownDefect.TAG) // issue #9
     @Test
-    @DisplayName("TC-APP-022 [APP-03] after a REJECTED application the student may apply again to the OPEN posting")
+    @DisplayName("TC-APP-022 [APP-03] after a REJECTED application the student may apply again to the OPEN posting (defect #9)")
     void reapplyAfterRejection() {
         application(student, posting, ApplicationState.REJECTED, 50);
 
@@ -129,8 +136,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
 
     // ------------------------------------------------------------------ POS-04 deadline is inclusive
 
+    @Tag(KnownDefect.TAG) // issue #8
     @Test
-    @DisplayName("TC-APP-023 [POS-04] an application on the deadline date is accepted (deadline is inclusive)")
+    @DisplayName("TC-APP-023 [POS-04] an application on the deadline date is accepted (deadline is inclusive) (defect #8)")
     void deadlineDayIsAccepted() {
         posting.setDeadline(today());
         postings.save(posting);
@@ -150,8 +158,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
 
     // ------------------------------------------------------------------ APP-07 shortlist threshold
 
+    @Tag(KnownDefect.TAG) // issue #10
     @Test
-    @DisplayName("TC-APP-024 [APP-07] a score equal to the threshold (60) is shortlisted without justification")
+    @DisplayName("TC-APP-024 [APP-07] a score equal to the threshold (60) is shortlisted without justification (defect #10)")
     void scoreEqualToThresholdNeedsNoJustification() {
         Application a = application(student, posting, ApplicationState.SUBMITTED, 60);
 
@@ -172,8 +181,9 @@ class Module2ApplicationRulesTest extends IntegrationTest {
 
     // ------------------------------------------------------------------ APP-06 / APP-08 withdraw
 
+    @Tag(KnownDefect.TAG) // issue #11
     @Test
-    @DisplayName("TC-APP-025 [APP-08, APP-06] an ACCEPTED application cannot be withdrawn")
+    @DisplayName("TC-APP-025 [APP-08, APP-06] an ACCEPTED application cannot be withdrawn (defect #11)")
     void acceptedCannotBeWithdrawn() {
         Application a = application(student, posting, ApplicationState.ACCEPTED, 80);
 
@@ -181,9 +191,10 @@ class Module2ApplicationRulesTest extends IntegrationTest {
         assertEquals(ApplicationState.ACCEPTED, applications.findById(a.getId()).orElseThrow().getState());
     }
 
+    @Tag(KnownDefect.TAG) // issue #11
     @ParameterizedTest(name = "{0} -> WITHDRAWN is refused")
     @EnumSource(value = ApplicationState.class, names = {"REJECTED", "WITHDRAWN"})
-    @DisplayName("TC-APP-025b [APP-06] withdraw is refused from states with no transition to WITHDRAWN")
+    @DisplayName("TC-APP-025b [APP-06] withdraw is refused from states with no transition to WITHDRAWN (defect #11)")
     void withdrawFromFinalStatesRefused(ApplicationState from) {
         Application a = application(student, posting, from, 50);
 

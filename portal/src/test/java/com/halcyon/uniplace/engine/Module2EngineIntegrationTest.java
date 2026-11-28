@@ -11,6 +11,8 @@ import com.halcyon.uniplace.engine.EngineDtos.MatchResult;
 import com.halcyon.uniplace.service.SettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import com.halcyon.uniplace.KnownDefect;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -82,8 +84,9 @@ class Module2EngineIntegrationTest {
 
     // ------------------------------------------------------------------ APP-04: what is sent
 
+    @Tag(KnownDefect.TAG) // issue #4
     @Test
-    @DisplayName("TC-APP-027 [APP-04, POS-01] eligibility uses the posting's own minimum GPA, not the default")
+    @DisplayName("TC-APP-027 [APP-04, POS-01] eligibility uses the posting's own minimum GPA, not the default (defect #4)")
     void postingMinimumGpaIsSent() {
         EngineRequestMapper mapper = new EngineRequestMapper(settings, clock);
 
@@ -93,8 +96,9 @@ class Module2EngineIntegrationTest {
         assertEquals(0, new BigDecimal("3.00").compareTo(r.minGpa), "minGpa sent: " + r.minGpa);
     }
 
+    @Tag(KnownDefect.TAG) // issue #5
     @Test
-    @DisplayName("TC-APP-028 [APP-04] the student's prior internships are sent to the Engine")
+    @DisplayName("TC-APP-028 [APP-04] the student's prior internships are sent to the Engine (defect #5)")
     void priorInternshipsAreSent() {
         EngineRequestMapper mapper = new EngineRequestMapper(settings, clock);
 
@@ -107,8 +111,9 @@ class Module2EngineIntegrationTest {
 
     // ------------------------------------------------------------------ REL-01: Engine failures
 
+    @Tag(KnownDefect.TAG) // issue #3
     @Test
-    @DisplayName("TC-APP-029 [REL-01] Engine error on eligibility: the student is never treated as eligible")
+    @DisplayName("TC-APP-029 [REL-01] Engine error on eligibility: the student is never treated as eligible (defect #3)")
     void eligibilityFailsClosed() {
         stubFor(post(urlEqualTo("/api/v1/eligibility")).willReturn(aResponse().withStatus(503)));
 
@@ -122,8 +127,9 @@ class Module2EngineIntegrationTest {
         assertFalse(eligible, "the Portal treated the student as eligible although the Engine did not answer");
     }
 
+    @Tag(KnownDefect.TAG) // issue #3
     @Test
-    @DisplayName("TC-APP-029b [REL-01] Engine unreachable on eligibility: the student is never treated as eligible")
+    @DisplayName("TC-APP-029b [REL-01] Engine unreachable on eligibility: the student is never treated as eligible (defect #3)")
     void eligibilityFailsClosedWhenUnreachable() {
         when(settings.engineBaseUrl()).thenReturn("http://127.0.0.1:1/api/v1");
         EngineClient unreachable = new EngineClient(RestClient.builder(), settings);
@@ -137,8 +143,9 @@ class Module2EngineIntegrationTest {
         assertFalse(eligible, "the Portal treated the student as eligible although the Engine was unreachable");
     }
 
+    @Tag(KnownDefect.TAG) // issue #3
     @Test
-    @DisplayName("TC-APP-030 [REL-01, APP-04] Engine error on match: refused, not stored as a score of 0")
+    @DisplayName("TC-APP-030 [REL-01, APP-04] Engine error on match: refused, not stored as a score of 0 (defect #3)")
     void matchFailsClosed() {
         stubFor(post(urlEqualTo("/api/v1/match")).willReturn(aResponse().withStatus(500)));
         MatchRequest m = new MatchRequest();
@@ -151,8 +158,9 @@ class Module2EngineIntegrationTest {
 
     // ------------------------------------------------------------------ APP-04: score cache
 
+    @Tag(KnownDefect.TAG) // issue #12
     @Test
-    @DisplayName("TC-APP-031 [APP-04, APP-07] two students with different skills get different scores for one posting")
+    @DisplayName("TC-APP-031 [APP-04, APP-07] two students with different skills get different scores for one posting (defect #12)")
     void scoreCacheDependsOnStudentSkills() {
         EngineClient engine = Mockito.mock(EngineClient.class);
         when(engine.match(any())).thenAnswer(inv -> {
